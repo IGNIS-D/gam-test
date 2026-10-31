@@ -793,6 +793,11 @@ topic(
            + "). 같은 지표도 언제 보느냐에 따라 값이 다릅니다.",
     n=7)
 
+# 홈 화면 순서 — «국제 시황»을 맨 앞에, «서울은 얼마나 더워졌나»를 그 자리로
+_i, _j = (next(k for k, t in enumerate(TOPICS) if t["id"] == x)
+          for x in ("seoul-heat", "macro"))
+TOPICS[_i], TOPICS[_j] = TOPICS[_j], TOPICS[_i]
+
 
 # ════════════════════════════════════════════════════════════════
 def main() -> None:

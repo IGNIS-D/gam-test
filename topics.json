@@ -52,11 +52,11 @@
   ],
   "topics": [
     {
-      "id": "seoul-heat",
-      "emoji": "🌡️",
-      "title": "서울은 얼마나 더워졌나",
-      "blurb": "1950년부터 2024년까지, 서울의 매일 기온",
-      "source": "Open-Meteo Archive (ERA5 재분석)"
+      "id": "macro",
+      "emoji": "📈",
+      "title": "국제 시황은 지금 어디쯤",
+      "blurb": "2026년 10월 마지막 주, 금리·환율·지수·유가",
+      "source": "네이버 증권 · FOMC 발표"
     },
     {
       "id": "seoul-rain",
@@ -129,11 +129,11 @@
       "source": "Open-Meteo Archive (ERA5 재분석)"
     },
     {
-      "id": "macro",
-      "emoji": "📈",
-      "title": "국제 시황은 지금 어디쯤",
-      "blurb": "2026년 10월 마지막 주, 금리·환율·지수·유가",
-      "source": "네이버 증권 · FOMC 발표"
+      "id": "seoul-heat",
+      "emoji": "🌡️",
+      "title": "서울은 얼마나 더워졌나",
+      "blurb": "1950년부터 2024년까지, 서울의 매일 기온",
+      "source": "Open-Meteo Archive (ERA5 재분석)"
     }
   ]
 }
