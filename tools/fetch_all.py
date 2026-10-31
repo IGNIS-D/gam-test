@@ -124,6 +124,22 @@ SOURCES: list[tuple[str, str, str]] = [
      "&start_date=1990-01-01&end_date=2024-12-31"
      "&daily=snowfall_sum,temperature_2m_min"
      "&timezone=Asia%2FSeoul" + ERA5),
+
+    # FRED 는 시리즈마다 한 파일. 값은 그날의 종가·고시값이지 '오전 9시' 값이 아니다.
+    # 한국 기준금리·코스피·코스닥은 FRED 에 없다 (IRSTCB01KRM156N 은 404).
+    # 그 값은 네이버 증권 화면을 보고 data/raw/naver_manual.csv 에 손으로 적는다
+    # (네이버 robots.txt 가 자동 수집을 막는다)
+    *[(f"fred_{sid}.csv", f"{desc} 2025-01~2026-10 (FRED {sid})",
+       "https://fred.stlouisfed.org/graph/fredgraph.csv"
+       f"?id={sid}&cosd=2025-01-01&coed=2026-10-31")
+      for sid, desc in (
+          ("IRLTLT01KRM156N", "한국 10년 만기 국채금리 · 월별 (기준금리 아님)"),
+          ("DFEDTARU", "미국 기준금리 목표 범위 상단 · 일별"),
+          ("DFEDTARL", "미국 기준금리 목표 범위 하단 · 일별"),
+          ("DEXKOUS", "원달러 환율 · 뉴욕 정오 기준 · 영업일"),
+          ("NASDAQCOM", "나스닥 종합지수 종가 · 영업일"),
+          ("DCOILWTICO", "WTI 유가 현물 (달러/배럴) · 영업일"),
+      )],
 ]
 
 

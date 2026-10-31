@@ -62,14 +62,15 @@ def owid_countries(rows, year, col):
             and not r["code"].startswith("OWID")}
 
 
-def topic(tid, emoji, title, blurb, source, source_url, questions, caveat=""):
+def topic(tid, emoji, title, blurb, source, source_url, questions, caveat="", n=5):
     """caveat = 이 데이터를 믿을 때의 한계. 앱 화면에도 그대로 나간다.
 
     출처가 다르면 같은 '서울 기온'도 값이 다르다. 그 사실을 감추지 않는다.
+    n = 이 주제의 문항 수. 빠뜨리거나 더 넣은 문항을 main() 에서 잡는다.
     """
     TOPICS.append({"id": tid, "emoji": emoji, "title": title, "blurb": blurb,
                    "source": source, "source_url": source_url,
-                   "caveat": caveat, "questions": questions})
+                   "caveat": caveat, "questions": questions, "n": n})
 
 
 def slider(qid, text, answer, unit, lo, hi, step, basis, why):
@@ -737,13 +738,68 @@ topic(
            "바꾼 값입니다. 쌓인 눈(적설)이나, 눈송이만 보여도 치는 기상청의 "
            "첫눈 기록과는 다릅니다.")
 
+# ── 12. 국제 시황 ────────────────────────────────────────────────
+# 네이버 증권 화면(미국 기준금리는 FOMC 발표)을 보고 손으로 적은 값이다.
+# 2026-10-31 은 토요일이라 장이 닫혀 있어, 값마다 기준 시각이 다르다.
+# 해설도 지어내지 않는다 — 기준선이나 상대 나라와의 차이를 계산해 적는다
+MK = {r["항목"]: r for r in load_csv("naver_manual.csv")}
+
+
+def mk(name):
+    return float(MK[name]["값"])
+
+
+def rate_opts(lo):
+    """lo 부터 0.25%p 간격 5개"""
+    return [f"{lo + 0.25 * i:.2f}%" for i in range(5)]
+
+
+def updown(qid, name, label, line, unit):
+    v, when = mk(name), MK[name]["기준일"]
+    assert v != line, f"{qid}: 값이 기준선과 같아 UP·DOWN 이 갈리지 않습니다"
+    return choice(qid, f"{when} 기준 {label}, {line:,}{unit}보다 UP일까요 DOWN일까요?",
+                  ["UP", "DOWN"], "UP" if v > line else "DOWN",
+                  f"{when} {label} {v:,g}{unit} (네이버 증권)",
+                  f"실제 값은 기준선보다 {abs(v - line):,g}{unit} "
+                  f"{'높' if v > line else '낮'}습니다.")
+
+
+kr_rate, us_rate = mk("한국 기준금리"), mk("미국 기준금리")
+
+topic(
+    "macro", "📈", "국제 시황은 지금 어디쯤",
+    "2026년 10월 마지막 주, 금리·환율·지수·유가",
+    "네이버 증권 · FOMC 발표", "https://stock.naver.com/",
+    [
+        choice("m1", f"{MK['한국 기준금리']['기준일']} 기준 한국은행 기준금리는?",
+               rate_opts(2.50), f"{kr_rate:.2f}%",
+               f"{MK['한국 기준금리']['기준일']} 한국은행 기준금리 {kr_rate:.2f}% (네이버 증권)",
+               f"미국({us_rate:.2f}%)과의 차이는 {kr_rate - us_rate:+.2f}%p입니다."),
+        choice("m2", f"{MK['미국 기준금리']['기준일']} FOMC 발표 기준 미국 기준금리"
+               "(목표 범위 상단)는?",
+               rate_opts(3.50), f"{us_rate:.2f}%",
+               f"{MK['미국 기준금리']['기준일']} FOMC 발표 목표 범위 상단 {us_rate:.2f}%",
+               f"한국({kr_rate:.2f}%)과의 차이는 {us_rate - kr_rate:+.2f}%p입니다."),
+        updown("m3", "원달러 환율", "원달러 환율", 1330, "원"),
+        updown("m4", "나스닥 종합", "나스닥 종합지수", 25500, "p"),
+        updown("m5", "WTI 유가", "WTI 국제유가(배럴당)", 102, "달러"),
+        updown("m6", "코스피", "코스피 지수", 5750, "p"),
+        updown("m7", "코스닥", "코스닥 지수", 700, "p"),
+    ],
+    caveat="네이버 증권 화면을 보고 옮겨 적은 값입니다. 2026-10-31은 토요일이라 "
+           "값마다 기준 시각이 다릅니다 ("
+           + " · ".join(f"{k} {MK[k]['기준일']}" for k in
+                        ("코스피", "코스닥", "원달러 환율", "나스닥 종합", "WTI 유가"))
+           + "). 같은 지표도 언제 보느냐에 따라 값이 다릅니다.",
+    n=7)
+
 
 # ════════════════════════════════════════════════════════════════
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     index = []
     for t in TOPICS:
-        assert len(t["questions"]) == 5, f"{t['id']}: 문항이 5개가 아닙니다"
+        assert len(t["questions"]) == t["n"], f"{t['id']}: 문항이 {t['n']}개가 아닙니다"
         pack = {k: t[k] for k in ("id", "emoji", "title", "blurb",
                                   "source", "source_url", "caveat")}
         pack["questions"] = t["questions"]
